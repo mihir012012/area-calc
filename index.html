@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Square Footage Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .room {
+            background-color: #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .room label {
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .room select {
+            padding: 5px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            margin-top: 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            background-color: #e9f7ef;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+            color: #155724;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #room-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+            margin-left: 10px;
+        }
+        .remove-btn:hover {
+            background-color: #c82333;
+        }
+        .saved-list {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .saved-list h3 {
+            margin: 0;
+            margin-bottom: 10px;
+        }
+        .saved-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            align-items: center;
+        }
+        .saved-item button {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>House Square Footage Calculator</h1>
+
+    <div id="room-container">
+        <!-- Room inputs will be dynamically added here -->
+    </div>
+
+    <div style="text-align: center;">
+        <button onclick="addRoom()">Add Room</button>
+        <button onclick="calculateTotalSqFt()">Calculate Total Sq. Ft.</button>
+        <button onclick="saveData()">Save Data</button>
+    </div>
+
+    <div class="output" id="output"></div>
+
+    <div class="saved-list" id="saved-list">
+        <h3>Saved Data</h3>
+        <ul id="saved-data-list"></ul>
+    </div>
+
+    <script>
+        // Create dropdowns for feet and inches
+        function createFeetDropdown(name) {
+            const select = document.createElement("select");
+            select.name = name;
+            for (let i = 0; i <= 20; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
+            }
+            return select;
+        }
+
+        function createInchDropdown(name) {
+            const select = document.createElement("select");
+            select.name = name;
+            for (let i = 0; i <= 11; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = i;
+                select.appendChild(option);
+            }
+            return select;
+        }
+
+        // Add a room dynamically
+        function addRoom(lengthFeet = 0, lengthInch = 0, widthFeet = 0, widthInch = 0) {
+            const roomContainer = document.getElementById("room-container");
+
+            // Create a div to hold a room's input
+            const roomDiv = document.createElement("div");
+            roomDiv.className = "room";
+
+            // Create and append inputs for length
+            roomDiv.appendChild(document.createTextNode("Length: "));
+            const lengthFeetSelect = createFeetDropdown("lengthFeet");
+            lengthFeetSelect.value = lengthFeet;
+            roomDiv.appendChild(lengthFeetSelect);
+            roomDiv.appendChild(document.createTextNode(" feet "));
+            const lengthInchSelect = createInchDropdown("lengthInch");
+            lengthInchSelect.value = lengthInch;
+            roomDiv.appendChild(lengthInchSelect);
+            roomDiv.appendChild(document.createTextNode(" inches "));
+
+            // Create and append inputs for width
+            roomDiv.appendChild(document.createTextNode("Width: "));
+            const widthFeetSelect = createFeetDropdown("widthFeet");
+            widthFeetSelect.value = widthFeet;
+            roomDiv.appendChild(widthFeetSelect);
+            roomDiv.appendChild(document.createTextNode(" feet "));
+            const widthInchSelect = createInchDropdown("widthInch");
+            widthInchSelect.value = widthInch;
+            roomDiv.appendChild(widthInchSelect);
+            roomDiv.appendChild(document.createTextNode(" inches "));
+
+            // Add remove button
+            const removeButton = document.createElement("button");
+            removeButton.textContent = "Remove";
+            removeButton.classList.add('remove-btn');
+            removeButton.onclick = function () {
+                roomDiv.remove();
+            };
+            roomDiv.appendChild(removeButton);
+
+            roomContainer.appendChild(roomDiv);
+        }
+
+        // Parse dimension into feet and inches
+        function parseDimension(feet, inch) {
+            return parseFloat(feet) + (parseFloat(inch) || 0) / 12;
+        }
+
+        // Calculate total square footage
+        function calculateTotalSqFt() {
+            const roomContainer = document.getElementById("room-container");
+            const rooms = roomContainer.getElementsByClassName("room");
+            let totalSqFt = 0;
+
+            Array.from(rooms).forEach(room => {
+                const lengthFeet = room.querySelector("[name='lengthFeet']").value;
+                const lengthInch = room.querySelector("[name='lengthInch']").value;
+                const widthFeet = room.querySelector("[name='widthFeet']").value;
+                const widthInch = room.querySelector("[name='widthInch']").value;
+
+                const length = parseDimension(lengthFeet, lengthInch);
+                const width = parseDimension(widthFeet, widthInch);
+
+                totalSqFt += length * width;
+            });
+
+            document.getElementById("output").textContent = `Total Square Feet: ${totalSqFt.toFixed(2)} sq. ft.`;
+            return totalSqFt;
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            const totalSqFt = calculateTotalSqFt();
+            const roomData = [];
+
+            const rooms = document.querySelectorAll(".room");
+            rooms.forEach(room => {
+                const lengthFeet = room.querySelector("[name='lengthFeet']").value;
+                const lengthInch = room.querySelector("[name='lengthInch']").value;
+                const widthFeet = room.querySelector("[name='widthFeet']").value;
+                const widthInch = room.querySelector("[name='widthInch']").value;
+
+                roomData.push({
+                    lengthFeet,
+                    lengthInch,
+                    widthFeet,
+                    widthInch
+                });
+            });
+
+            const houseName = prompt("Enter a name for this house layout:");
+            if (houseName) {
+                const houseData = {
+                    name: houseName,
+                    totalSqFt,
+                    rooms: roomData
+                };
+
+                localStorage.setItem(houseName, JSON.stringify(houseData));
+                displaySavedData();
+            }
+        }
+
+        // Load a saved layout for editing
+        function loadSavedLayout(name) {
+            const data = JSON.parse(localStorage.getItem(name));
+
+            // Clear current room inputs
+            document.getElementById("room-container").innerHTML = "";
+
+            // Populate rooms from the saved data
+            data.rooms.forEach(room => {
+                addRoom(room.lengthFeet, room.lengthInch, room.widthFeet, room.widthInch);
+            });
+
+            calculateTotalSqFt();
+        }
+
+        // Delete saved layout
+        function deleteSavedLayout(name) {
+            localStorage.removeItem(name);
+            displaySavedData();
+        }
+
+        // Display saved data with edit and delete options
+        function displaySavedData() {
+            const savedList = document.getElementById("saved-data-list");
+            savedList.innerHTML = '';
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const data = JSON.parse(localStorage.getItem(key));
+
+                const li = document.createElement("li");
+                li.className = "saved-item";
+                li.textContent = `${data.name}: ${data.totalSqFt.toFixed(2)} sq. ft.`;
+
+                const editButton = document.createElement("button");
+                editButton.textContent = "Edit";
+                editButton.onclick = function () {
+                    loadSavedLayout(data.name);
+                };
+                li.appendChild(editButton);
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete";
+                deleteButton.onclick = function () {
+                    deleteSavedLayout(data.name);
+                };
+                li.appendChild(deleteButton);
+
+                savedList.appendChild(li);
+            }
+        }
+
+        // Add an initial room on page load and load saved data
+        window.onload = function () {
+            addRoom();
+            displaySavedData();
+        };
+    </script>
+
+</body>
+</html>
